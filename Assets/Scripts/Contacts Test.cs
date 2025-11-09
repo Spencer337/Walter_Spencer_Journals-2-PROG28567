@@ -6,6 +6,7 @@ public class ContactsTest : MonoBehaviour
     public TextMeshProUGUI contactsText;
     public Rigidbody2D selfRigidBody;
     public int numOfContacts;
+    public Vector2 point; 
 
     //public ContactPoint2D contacts;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -17,7 +18,11 @@ public class ContactsTest : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        point = Vector2.zero;
+        if (selfRigidBody.OverlapPoint(point) == true)
+        {
+            Debug.Log("Overlapping");
+        }
     }
 
     public void OnCollisionStay2D(Collision2D collision)
