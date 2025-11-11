@@ -21,12 +21,12 @@ public class OverlapTest : MonoBehaviour
         
     }
 
-    public void OnTriggerStay2D(Collider2D collision)
+    public void OnTriggerEnter2D(Collider2D collision)
     {
         results.Add(collision);
 
         numOfCollisions = Physics2D.OverlapCollider(selfCollider, results);
-        overlapText.text = "Overlap Points: " + numOfCollisions.ToString();
+        overlapText.text = "Overlapping Colliders: " + numOfCollisions.ToString();
     }
 
     public void OnTriggerExit2D(Collider2D collision)
@@ -34,6 +34,6 @@ public class OverlapTest : MonoBehaviour
         results.Remove(collision);
 
         numOfCollisions = Physics2D.OverlapCollider(selfCollider, results);
-        overlapText.text = "Overlap Points: " + numOfCollisions.ToString();
+        overlapText.text = "Overlapping Colliders: " + numOfCollisions.ToString();
     }
 }
