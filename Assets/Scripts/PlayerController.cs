@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Android.Gradle.Manifest;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
@@ -15,6 +17,11 @@ public class PlayerController : MonoBehaviour
     public bool isFacingLeft = true;
     public ContactPoint2D[] contacts;
     public int numOfContacts;
+    public float apexHeight;
+    public float apexTime;
+    public float playerGravity, initialJumpVelocity;
+    private bool jumpTriggered = false;
+    private Vector2 playerInput = new Vector2();
     public enum FacingDirection
     {
         left, right
@@ -26,6 +33,8 @@ public class PlayerController : MonoBehaviour
         acceleration = maxSpeed / accelerationTime;
         deceleration = maxSpeed / decelerationTime;
         contacts = new ContactPoint2D[10];
+        playerGravity = -2 * apexHeight / (Mathf.Pow(apexTime, 2));
+        initialJumpVelocity = 2 * apexHeight / apexTime;
     }
 
     // Update is called once per frame
@@ -33,7 +42,7 @@ public class PlayerController : MonoBehaviour
     {
         //The input from the player needs to be determined and then passed in the to the MovementUpdate which should
         //manage the actual movement of the character.
-        Vector2 playerInput = new Vector2();
+        playerInput = Vector2.zero;
         if(Input.GetKey(KeyCode.A))
         {
             playerInput = Vector2.left;
@@ -44,10 +53,21 @@ public class PlayerController : MonoBehaviour
             playerInput = Vector2.right;
             isFacingLeft = false;
         }
-            MovementUpdate(playerInput);
+        //MovementUpdate(playerInput);
+        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded() == true)
+        {
+            jumpTriggered = true;
+        }
+        
     }
 
-    private void MovementUpdate(Vector2 playerInput)
+    private void FixedUpdate()
+    {
+        MovementUpdate();
+    }
+
+    
+    private void MovementUpdate()
     {
         if (playerInput.magnitude > 0)
         {
@@ -70,6 +90,17 @@ public class PlayerController : MonoBehaviour
             }
 
         }
+
+        velocity.y += playerGravity * Time.fixedDeltaTime;
+
+        if (jumpTriggered == true)
+        {
+            //selfRigidBody.linearVelocityY = initialJumpVelocity;
+            // Get apex height and time of the largest jump, and then apex height and time of the smallest jump, and then linearlly interpolate between the two?
+            velocity.y += initialJumpVelocity;
+            jumpTriggered = false;
+        }
+
         selfRigidBody.linearVelocity = velocity;
     }
 
