@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -58,12 +59,12 @@ public class PlayerController : MonoBehaviour
         {
             jumpTriggered = true;
         }
-        
+        MovementUpdate();
     }
 
     private void FixedUpdate()
     {
-        MovementUpdate();
+        selfRigidBody.linearVelocity = horizontalVelocity + verticalVelocity;
     }
 
     
@@ -93,23 +94,20 @@ public class PlayerController : MonoBehaviour
 
         if (IsGrounded() == false)
         {
-            verticalVelocity.y += playerGravity * Time.fixedDeltaTime;
+            verticalVelocity.y += playerGravity * Time.deltaTime;
         }
-        else
+        else if (IsGrounded() == true && verticalVelocity.y < 0)
         {
             verticalVelocity.y = 0;
         }
 
         if (jumpTriggered == true)
         {
-            verticalVelocity = Vector2.zero;
-            //selfRigidBody.linearVelocityY = initialJumpVelocity;
             // Get apex height and time of the largest jump, and then apex height and time of the smallest jump, and then linearlly interpolate between the two?
             verticalVelocity.y += initialJumpVelocity;
             jumpTriggered = false;
         }
 
-        selfRigidBody.linearVelocity = verticalVelocity + horizontalVelocity;
     }
 
     public bool IsWalking()

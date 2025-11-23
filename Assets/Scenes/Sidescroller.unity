@@ -1711,8 +1711,8 @@ MonoBehaviour:
   verticalVelocity: {x: 0, y: 0}
   isFacingLeft: 1
   numOfContacts: 0
-  apexHeight: 6
-  apexTime: 1
+  apexHeight: 3
+  apexTime: 0.6
   playerGravity: 0
   initialJumpVelocity: 0
 --- !u!4 &1433354315
