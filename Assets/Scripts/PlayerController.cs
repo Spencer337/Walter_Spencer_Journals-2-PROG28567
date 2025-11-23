@@ -13,7 +13,7 @@ public class PlayerController : MonoBehaviour
     public float decelerationTime = 1;
     public float acceleration;
     public float deceleration;
-    public Vector2 velocity;
+    public Vector2 horizontalVelocity, verticalVelocity;
     public bool isFacingLeft = true;
     public ContactPoint2D[] contacts;
     public int numOfContacts;
@@ -71,42 +71,50 @@ public class PlayerController : MonoBehaviour
     {
         if (playerInput.magnitude > 0)
         {
-            velocity += playerInput * acceleration * Time.deltaTime;
-            if (velocity.magnitude > maxSpeed)
+            horizontalVelocity += playerInput * acceleration * Time.deltaTime;
+            if (horizontalVelocity.magnitude > maxSpeed)
             {
-                velocity = velocity.normalized * maxSpeed;
+                horizontalVelocity = horizontalVelocity.normalized * maxSpeed;
             }
         }
         else
         {
-            Vector2 changeInVelocity = velocity.normalized * deceleration * Time.deltaTime;
-            if (changeInVelocity.magnitude > velocity.magnitude)
+            Vector2 changeInVelocity = horizontalVelocity.normalized * deceleration * Time.deltaTime;
+            if (changeInVelocity.magnitude > horizontalVelocity.magnitude)
             {
-                velocity = Vector2.zero;
+                horizontalVelocity = Vector2.zero;
             }
             else
             {
-                velocity -= changeInVelocity;
+                horizontalVelocity -= changeInVelocity;
             }
 
         }
 
-        velocity.y += playerGravity * Time.fixedDeltaTime;
+        if (IsGrounded() == false)
+        {
+            verticalVelocity.y += playerGravity * Time.fixedDeltaTime;
+        }
+        else
+        {
+            verticalVelocity.y = 0;
+        }
 
         if (jumpTriggered == true)
         {
+            verticalVelocity = Vector2.zero;
             //selfRigidBody.linearVelocityY = initialJumpVelocity;
             // Get apex height and time of the largest jump, and then apex height and time of the smallest jump, and then linearlly interpolate between the two?
-            velocity.y += initialJumpVelocity;
+            verticalVelocity.y += initialJumpVelocity;
             jumpTriggered = false;
         }
 
-        selfRigidBody.linearVelocity = velocity;
+        selfRigidBody.linearVelocity = verticalVelocity + horizontalVelocity;
     }
 
     public bool IsWalking()
     {
-        if (velocity.magnitude > 0)
+        if (horizontalVelocity.magnitude > 0)
         {
             return true;
         }
