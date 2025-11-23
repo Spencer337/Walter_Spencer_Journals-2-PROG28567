@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
     private bool jumpTriggered = false;
     private Vector2 playerInput = new Vector2();
     public float terminalSpeed = -5;
+    public float coyoteTime, hangTime;
     public enum FacingDirection
     {
         left, right
@@ -56,7 +57,7 @@ public class PlayerController : MonoBehaviour
             isFacingLeft = false;
         }
         //MovementUpdate(playerInput);
-        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded() == true)
+        if (Input.GetKeyDown(KeyCode.Space) && hangTime < coyoteTime)
         {
             jumpTriggered = true;
         }
@@ -93,17 +94,22 @@ public class PlayerController : MonoBehaviour
 
         }
 
+
         if (IsGrounded() == false)
         {
             verticalVelocity.y += playerGravity * Time.deltaTime;
+            hangTime += Time.deltaTime;
         }
         else if (IsGrounded() == true && verticalVelocity.y < 0)
         {
+            hangTime = 0;
             verticalVelocity.y = 0;
         }
 
         if (jumpTriggered == true)
         {
+            verticalVelocity.y = 0;
+            hangTime = coyoteTime;
             // Get apex height and time of the largest jump, and then apex height and time of the smallest jump, and then linearlly interpolate between the two?
             verticalVelocity.y += initialJumpVelocity;
             jumpTriggered = false;
