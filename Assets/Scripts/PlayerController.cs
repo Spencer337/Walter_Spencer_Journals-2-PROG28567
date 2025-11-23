@@ -23,6 +23,7 @@ public class PlayerController : MonoBehaviour
     public float playerGravity, initialJumpVelocity;
     private bool jumpTriggered = false;
     private Vector2 playerInput = new Vector2();
+    public float terminalSpeed = -5;
     public enum FacingDirection
     {
         left, right
@@ -106,6 +107,12 @@ public class PlayerController : MonoBehaviour
             // Get apex height and time of the largest jump, and then apex height and time of the smallest jump, and then linearlly interpolate between the two?
             verticalVelocity.y += initialJumpVelocity;
             jumpTriggered = false;
+        }
+
+        // If the player is falling faster than the terminal speed, set vertical velocity to the terminal speed
+        if (verticalVelocity.y < terminalSpeed)
+        {
+            verticalVelocity.y = terminalSpeed;
         }
 
     }

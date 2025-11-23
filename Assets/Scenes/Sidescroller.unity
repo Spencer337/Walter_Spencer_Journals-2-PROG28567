@@ -1715,6 +1715,7 @@ MonoBehaviour:
   apexTime: 0.6
   playerGravity: 0
   initialJumpVelocity: 0
+  terminalSpeed: -5
 --- !u!4 &1433354315
 Transform:
   m_ObjectHideFlags: 0
