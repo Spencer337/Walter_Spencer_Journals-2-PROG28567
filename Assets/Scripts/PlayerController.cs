@@ -2,7 +2,6 @@ using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Android.Gradle.Manifest;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -110,7 +109,6 @@ public class PlayerController : MonoBehaviour
         {
             verticalVelocity.y = 0;
             hangTime = coyoteTime;
-            // Get apex height and time of the largest jump, and then apex height and time of the smallest jump, and then linearlly interpolate between the two?
             verticalVelocity.y += initialJumpVelocity;
             jumpTriggered = false;
         }
