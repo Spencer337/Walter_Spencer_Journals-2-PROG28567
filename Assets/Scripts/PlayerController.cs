@@ -11,8 +11,8 @@ public class PlayerController : MonoBehaviour
     public float maxSpeed = 5;
     public float accelerationTime = 2;
     public float decelerationTime = 1;
-    public float acceleration;
-    public float deceleration;
+    private float acceleration;
+    private float deceleration;
     public Vector2 horizontalVelocity, verticalVelocity;
     public bool isFacingLeft = true;
     public ContactPoint2D[] contacts;
@@ -20,9 +20,12 @@ public class PlayerController : MonoBehaviour
     public float apexHeight;
     public float apexTime;
     public float playerGravity, initialJumpVelocity;
-    private bool jumpTriggered = false;
+    public bool jumpTriggered, doubleJumpTriggered, jumpSpent, doubleJumpSpent;
+    public float doubleApexHeight, doubleApexTime;
+    public float doubleJumpGravity, doubleJumpVelocity;
     private Vector2 playerInput = new Vector2();
     public float terminalSpeed = -5;
+    public float doubleJumpTerminalSpeed = -3;
     public float coyoteTime, hangTime;
     public float dashDistance, dashTime;
     public Vector2 startPosition, endPosition;
@@ -37,12 +40,21 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        jumpTriggered = false;
+        doubleJumpTriggered = false;
+        jumpSpent = false;
+        jumpSpent = false;
+        doubleApexHeight = apexHeight * 0.75f;
+        doubleApexTime = apexTime * 0.75f;
         maxDashSpeed = maxSpeed + dashDistance;
         acceleration = maxSpeed / accelerationTime;
         deceleration = maxSpeed / decelerationTime;
         contacts = new ContactPoint2D[10];
         playerGravity = -2 * apexHeight / (Mathf.Pow(apexTime, 2));
         initialJumpVelocity = 2 * apexHeight / apexTime;
+        doubleJumpGravity = -1.5f * doubleApexHeight / (Mathf.Pow(doubleApexTime, 2));
+        doubleJumpVelocity = 2 * doubleApexHeight / doubleApexTime;
+
     }
 
     // Update is called once per frame
@@ -62,9 +74,13 @@ public class PlayerController : MonoBehaviour
             isFacingLeft = false;
         }
         //MovementUpdate(playerInput);
-        if (Input.GetKeyDown(KeyCode.Space) && hangTime < coyoteTime)
+        if (Input.GetKeyDown(KeyCode.Space) && hangTime < coyoteTime && jumpSpent == false)
         {
             jumpTriggered = true;
+        }
+        else if (Input.GetKeyDown(KeyCode.Space) && jumpSpent == true && doubleJumpSpent == false)
+        {
+            doubleJumpTriggered = true;
         }
         // If the player presses the left shift button, they dash
         if (Input.GetKeyDown(KeyCode.LeftShift) && isDashing == false)
@@ -113,16 +129,34 @@ public class PlayerController : MonoBehaviour
 
         }
 
-
+        // Standard gravity
         if (IsGrounded() == false && isDashing == false)
         {
             verticalVelocity.y += playerGravity * Time.deltaTime;
             hangTime += Time.deltaTime;
+            // If the player is falling faster than the terminal speed, set vertical velocity to the terminal speed
+            if (verticalVelocity.y < terminalSpeed)
+            {
+                verticalVelocity.y = terminalSpeed;
+            }
         }
-        else if (IsGrounded() == true && verticalVelocity.y < 0)
+        // Double jump gravity
+        if (IsGrounded() == false && doubleJumpSpent == true)
+        {
+            verticalVelocity.y += doubleJumpGravity * Time.deltaTime;
+            hangTime += Time.deltaTime;
+            // If the player is falling faster than the terminal speed, set vertical velocity to the terminal speed
+            if (verticalVelocity.y < doubleJumpTerminalSpeed)
+            {
+                verticalVelocity.y = doubleJumpTerminalSpeed;
+            }
+        }
+        if (IsGrounded() == true && verticalVelocity.y < 0)
         {
             hangTime = 0;
             verticalVelocity.y = 0;
+            jumpSpent = false;
+            doubleJumpSpent = false;
         }
 
         if (jumpTriggered == true && isDashing == false)
@@ -131,16 +165,21 @@ public class PlayerController : MonoBehaviour
             hangTime = coyoteTime;
             verticalVelocity.y += initialJumpVelocity;
             jumpTriggered = false;
+            jumpSpent = true;
         }
         else if (jumpTriggered == true &&  isDashing == true)
         {
             jumpTriggered = false;
         }
 
-        // If the player is falling faster than the terminal speed, set vertical velocity to the terminal speed
-        if (verticalVelocity.y < terminalSpeed)
+        if (doubleJumpTriggered == true)
         {
-            verticalVelocity.y = terminalSpeed;
+            verticalVelocity.y = 0;
+            horizontalVelocity.x = 0;
+            hangTime = coyoteTime;
+            verticalVelocity.y += doubleJumpVelocity;
+            doubleJumpTriggered = false;
+            doubleJumpSpent = true;
         }
 
         // Dash management
