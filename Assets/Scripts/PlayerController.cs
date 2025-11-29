@@ -24,6 +24,11 @@ public class PlayerController : MonoBehaviour
     private Vector2 playerInput = new Vector2();
     public float terminalSpeed = -5;
     public float coyoteTime, hangTime;
+    public float dashDistance, dashTime;
+    public Vector2 startPosition, endPosition;
+    public bool isDashing = false;
+    public AnimationCurve dashCurve;
+    public float dashCurveTime, maxDashSpeed;
     public enum FacingDirection
     {
         left, right
@@ -32,6 +37,7 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        maxDashSpeed = maxSpeed + dashDistance;
         acceleration = maxSpeed / accelerationTime;
         deceleration = maxSpeed / decelerationTime;
         contacts = new ContactPoint2D[10];
@@ -59,6 +65,20 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) && hangTime < coyoteTime)
         {
             jumpTriggered = true;
+        }
+        // If the player presses the left shift button, they dash
+        if (Input.GetKeyDown(KeyCode.LeftShift) && isDashing == false)
+        {
+            if (isFacingLeft == true)
+            {
+                endPosition.x = horizontalVelocity.x -dashDistance;
+            }
+            else
+            {
+                endPosition.x = horizontalVelocity.x + dashDistance;
+            }
+            startPosition.x = horizontalVelocity.x;
+            isDashing = true;
         }
         MovementUpdate();
     }
@@ -94,7 +114,7 @@ public class PlayerController : MonoBehaviour
         }
 
 
-        if (IsGrounded() == false)
+        if (IsGrounded() == false && isDashing == false)
         {
             verticalVelocity.y += playerGravity * Time.deltaTime;
             hangTime += Time.deltaTime;
@@ -105,11 +125,15 @@ public class PlayerController : MonoBehaviour
             verticalVelocity.y = 0;
         }
 
-        if (jumpTriggered == true)
+        if (jumpTriggered == true && isDashing == false)
         {
             verticalVelocity.y = 0;
             hangTime = coyoteTime;
             verticalVelocity.y += initialJumpVelocity;
+            jumpTriggered = false;
+        }
+        else if (jumpTriggered == true &&  isDashing == true)
+        {
             jumpTriggered = false;
         }
 
@@ -117,6 +141,25 @@ public class PlayerController : MonoBehaviour
         if (verticalVelocity.y < terminalSpeed)
         {
             verticalVelocity.y = terminalSpeed;
+        }
+
+        // Dash management
+        if (isDashing == true)
+        {
+            verticalVelocity.y = 0;
+            horizontalVelocity = Vector2.Lerp(startPosition, endPosition, dashTime);
+            dashCurveTime += Time.deltaTime;
+            dashTime = 1 * dashCurve.Evaluate(dashCurveTime);
+            if (horizontalVelocity.magnitude > maxDashSpeed)
+            {
+                horizontalVelocity = horizontalVelocity.normalized * maxDashSpeed;
+            }
+        }
+        if (dashTime > 1 || dashCurveTime > 1)
+        {
+            dashTime = 0;
+            dashCurveTime = 0;
+            isDashing = false;
         }
 
     }
