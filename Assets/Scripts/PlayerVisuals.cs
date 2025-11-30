@@ -17,7 +17,7 @@ public class PlayerVisuals : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        bodyRenderer = GetComponent<SpriteRenderer>();
+        //bodyRenderer = GetComponent<SpriteRenderer>();
         isWalkingHash = Animator.StringToHash("IsWalking");
         isGroundedHash = Animator.StringToHash("IsGrounded");
         onDeathHash = Animator.StringToHash("OnDeath");
@@ -48,6 +48,18 @@ public class PlayerVisuals : MonoBehaviour
             if (playerController.currentState == PlayerController.CharacterState.walk)
             {
                 animator.Play("Walking");
+            }
+            if (playerController.currentState == PlayerController.CharacterState.falling)
+            {
+                animator.Play("Falling");
+            }
+            if (playerController.currentState == PlayerController.CharacterState.doublejump)
+            {
+                animator.Play("Double Jumping");
+            }
+            if (playerController.currentState == PlayerController.CharacterState.dash)
+            {
+                animator.Play("Dashing");
             }
         }
 

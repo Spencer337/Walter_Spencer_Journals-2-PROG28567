@@ -47,7 +47,7 @@ public class PlayerController : MonoBehaviour
 
     public enum CharacterState
     {
-        idle, walk, jump, death
+        idle, walk, jump, death, falling, doublejump, dash
     }
 
     // Start is called before the first frame update
@@ -225,9 +225,21 @@ public class PlayerController : MonoBehaviour
         {
             currentState = CharacterState.walk;
         }
-        else if (!IsGrounded())
+        else if (doubleJumpSpent == true && verticalVelocity.y > 0)
+        {
+            currentState = CharacterState.doublejump;
+        }
+        else if (gravityEnabled == false)
+        {
+            currentState = CharacterState.falling;
+        }
+        else if (!IsGrounded() && verticalVelocity.y > 0)
         {
             currentState = CharacterState.jump;
+        }
+        else if (!IsGrounded() && verticalVelocity.y < 0)
+        {
+            currentState = CharacterState.falling;
         }
         else
         {
@@ -237,6 +249,11 @@ public class PlayerController : MonoBehaviour
         if(health <= 0)
         {
             currentState = CharacterState.death;
+        }
+
+        if(isDashing == true)
+        {
+            currentState = CharacterState.dash;
         }
     }
 
@@ -327,5 +344,10 @@ public class PlayerController : MonoBehaviour
             }
             gravityEnabled = true;
         }
+    }
+
+    public void OnDyingAnimationComplete()
+    {
+        gameObject.SetActive(false);
     }
 }
