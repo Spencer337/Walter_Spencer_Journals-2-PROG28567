@@ -35,9 +35,19 @@ public class PlayerController : MonoBehaviour
     public float dashCurveTime, maxDashSpeed;
     public bool gravityEnabled = true;
     public float antiGravSpeed = 0.5f;
+    public int health = 3;
+
+    public CharacterState currentState = CharacterState.idle;
+    public CharacterState previousState = CharacterState.idle;
+
     public enum FacingDirection
     {
         left, right
+    }
+
+    public enum CharacterState
+    {
+        idle, walk, jump, death
     }
 
     // Start is called before the first frame update
@@ -100,6 +110,7 @@ public class PlayerController : MonoBehaviour
             isDashing = true;
         }
         MovementUpdate();
+        StateUpdate();
     }
 
     private void FixedUpdate()
@@ -206,6 +217,38 @@ public class PlayerController : MonoBehaviour
 
     }
 
+    private void StateUpdate()
+    {
+        previousState = currentState;
+
+        if (IsWalking() && IsGrounded())
+        {
+            currentState = CharacterState.walk;
+        }
+        else if (!IsGrounded())
+        {
+            currentState = CharacterState.jump;
+        }
+        else
+        {
+            currentState = CharacterState.idle;
+        }
+
+        if(health <= 0)
+        {
+            currentState = CharacterState.death;
+        }
+    }
+
+    public bool HasDied()
+    {
+        if (health <= 0)
+        {
+            return true;
+        }
+        return false;
+    }
+
     public bool IsWalking()
     {
         if (horizontalVelocity.magnitude > 0)
@@ -262,6 +305,7 @@ public class PlayerController : MonoBehaviour
                 selfRigidBody.MoveRotation(180);
             }
             gravityEnabled = false;
+            verticalVelocity.y = 0;
         }
     }
 
