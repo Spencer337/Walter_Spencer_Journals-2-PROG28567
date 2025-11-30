@@ -32,9 +32,7 @@ public class PlayerVisuals : MonoBehaviour
     //It is not recommended to make changes to the functionality of this code for the W10 journal.
     private void VisualsUpdate()
     {
-        //animator.SetBool(isWalkingHash, playerController.IsWalking());
-        //animator.SetBool(isGroundedHash, playerController.IsGrounded());
-
+        // If a state change has been made, play the animation of that state
         if (playerController.currentState != playerController.previousState)
         {
             if (playerController.currentState == PlayerController.CharacterState.idle)
@@ -63,6 +61,7 @@ public class PlayerVisuals : MonoBehaviour
             }
         }
 
+        // If the player has died, play the death animation
         if (playerController.HasDied())
         {
             animator.Play("Death");
