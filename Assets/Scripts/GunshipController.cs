@@ -67,6 +67,4 @@ public class GunshipController : MonoBehaviour
         return direction;
     }
 
-
-
 }

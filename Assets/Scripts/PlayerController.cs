@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.XR;
 
 public class PlayerController : MonoBehaviour
 {
@@ -32,6 +33,8 @@ public class PlayerController : MonoBehaviour
     public bool isDashing = false;
     public AnimationCurve dashCurve;
     public float dashCurveTime, maxDashSpeed;
+    public bool gravityEnabled = true;
+    public float antiGravSpeed = 0.5f;
     public enum FacingDirection
     {
         left, right
@@ -130,7 +133,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // Standard gravity
-        if (IsGrounded() == false && isDashing == false)
+        if (IsGrounded() == false && isDashing == false && gravityEnabled == true)
         {
             verticalVelocity.y += playerGravity * Time.deltaTime;
             hangTime += Time.deltaTime;
@@ -141,7 +144,7 @@ public class PlayerController : MonoBehaviour
             }
         }
         // Double jump gravity
-        if (IsGrounded() == false && doubleJumpSpent == true)
+        if (IsGrounded() == false && doubleJumpSpent == true && gravityEnabled == true)
         {
             verticalVelocity.y += doubleJumpGravity * Time.deltaTime;
             hangTime += Time.deltaTime;
@@ -151,7 +154,7 @@ public class PlayerController : MonoBehaviour
                 verticalVelocity.y = doubleJumpTerminalSpeed;
             }
         }
-        if (IsGrounded() == true && verticalVelocity.y < 0)
+        if (IsGrounded() == true && verticalVelocity.y < 0 && gravityEnabled == true)
         {
             hangTime = 0;
             verticalVelocity.y = 0;
@@ -248,5 +251,37 @@ public class PlayerController : MonoBehaviour
     public void OnCollisionExit2D(Collision2D collision)
     {
         numOfContacts = collision.GetContacts(contacts);
+    }
+
+    public void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.layer == 6)
+        {
+            if (isDashing == false)
+            {
+                selfRigidBody.MoveRotation(180);
+            }
+            gravityEnabled = false;
+        }
+    }
+
+    public void OnTriggerStay2D(Collider2D collision)
+    {
+        if (collision.gameObject.layer == 6)
+        {
+            verticalVelocity.y -= playerGravity * Time.deltaTime * antiGravSpeed;
+        }
+    }
+
+    public void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.gameObject.layer == 6)
+        {
+            if (isDashing == false)
+            {
+                selfRigidBody.MoveRotation(0);
+            }
+            gravityEnabled = true;
+        }
     }
 }
