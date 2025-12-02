@@ -9,7 +9,7 @@ using UnityEngine.XR;
 public class PlayerController : MonoBehaviour
 {
     public Rigidbody2D selfRigidBody;
-    public float maxSpeed = 5;
+    public float maxSpeed = 5; 
     public float accelerationTime = 2;
     public float decelerationTime = 1;
     private float acceleration;
