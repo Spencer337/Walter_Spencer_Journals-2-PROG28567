@@ -28,7 +28,7 @@ public class PlayerController : MonoBehaviour
     public float terminalSpeed = -5;
     public float doubleJumpTerminalSpeed = -3;
     public float coyoteTime, hangTime;
-    public float dashDistance, dashTime;
+    public float dashDistance, dashTime, minDashDistance;
     public Vector2 startPosition, endPosition;
     public bool isDashing = false;
     public AnimationCurve dashCurve;
@@ -60,7 +60,7 @@ public class PlayerController : MonoBehaviour
         jumpSpent = false;
 
         // Set the properties of the jump and double jump variables
-        doubleApexHeight = apexHeight * 0.75f;
+        doubleApexHeight = apexHeight * 0.95f;
         doubleApexTime = apexTime * 0.75f;
         playerGravity = -2 * apexHeight / (Mathf.Pow(apexTime, 2));
         initialJumpVelocity = 2 * apexHeight / apexTime;
@@ -109,12 +109,22 @@ public class PlayerController : MonoBehaviour
             // If the player is facing left, set the dash end positon to the left of the player
             if (isFacingLeft == true)
             {
-                endPosition.x = horizontalVelocity.x -dashDistance;
+                endPosition.x = horizontalVelocity.x - dashDistance;
+                // If the end position falls short of the minimum dash distance, set the end position to the dash distance
+                if (endPosition.x > -minDashDistance)
+                {
+                    endPosition.x = -minDashDistance;
+                }
             }
             // If the player is facing right, set the dash end positon to the right of the player
             else
             {
                 endPosition.x = horizontalVelocity.x + dashDistance;
+                // If the end position falls short of the minimum dash distance, set the end position to the dash distance
+                if (endPosition.x < minDashDistance)
+                {
+                    endPosition.x = minDashDistance;
+                }
             }
             startPosition.x = horizontalVelocity.x;
             isDashing = true;
@@ -159,7 +169,28 @@ public class PlayerController : MonoBehaviour
             {
                 horizontalVelocity -= changeInVelocity;
             }
+        }
 
+        // If the player is dashing, have their horizontal velocity linearlly interpolate between it's current positon, and that position increased by dash distance
+        if (isDashing == true)
+        {
+            verticalVelocity.y = 0;
+            horizontalVelocity = Vector2.Lerp(startPosition, endPosition, dashTime);
+            dashCurveTime += Time.deltaTime;
+            dashTime = 1 * dashCurve.Evaluate(dashCurveTime);
+            // If the player is moving faster than the max dash speed, set their movement back to the max dash speed
+            if (horizontalVelocity.magnitude > maxDashSpeed)
+            {
+                horizontalVelocity = horizontalVelocity.normalized * maxDashSpeed;
+            }
+        }
+        // If the dashTime or dashCurveTime are greater than 1, set them back to zero and end the dash
+        // If the player presses the dash key again, also end the dash
+        if (dashTime > 1 || dashCurveTime > 1 || Input.GetKeyDown(KeyCode.Space))
+        {
+            dashTime = 0;
+            dashCurveTime = 0;
+            isDashing = false;
         }
 
         // If the player is in standard gravity, increase their vertical velocity by the playerGravity variable
@@ -192,19 +223,15 @@ public class PlayerController : MonoBehaviour
             jumpSpent = false;
             doubleJumpSpent = false;
         }
-        // If a jump is input while the player is not dashing, the character jumps
-        if (jumpTriggered == true && isDashing == false)
+
+        // If a jump is input, the character jumps
+        if (jumpTriggered == true)
         {
             verticalVelocity.y = 0;
             hangTime = coyoteTime;
             verticalVelocity.y += initialJumpVelocity;
             jumpTriggered = false;
             jumpSpent = true;
-        }
-        // If a jump is input while the player is dashing, the character does not jump
-        else if (jumpTriggered == true &&  isDashing == true)
-        {
-            jumpTriggered = false;
         }
         // If a double jump is triggered, the character performs the double jump
         if (doubleJumpTriggered == true)
@@ -216,26 +243,7 @@ public class PlayerController : MonoBehaviour
             doubleJumpTriggered = false;
             doubleJumpSpent = true;
         }
-        // If the player is dashing, have their horizontal velocity linearlly interpolate between it's current positon, and that position increased by dash distance
-        if (isDashing == true)
-        {
-            verticalVelocity.y = 0;
-            horizontalVelocity = Vector2.Lerp(startPosition, endPosition, dashTime);
-            dashCurveTime += Time.deltaTime;
-            dashTime = 1 * dashCurve.Evaluate(dashCurveTime);
-            // If the player is moving faster than the max dash speed, set their movement back to the max dash speed
-            if (horizontalVelocity.magnitude > maxDashSpeed)
-            {
-                horizontalVelocity = horizontalVelocity.normalized * maxDashSpeed;
-            }
-        }
-        // If the dashTime or dashCurveTime are greater than 1, set them back to zero and end the dash
-        if (dashTime > 1 || dashCurveTime > 1)
-        {
-            dashTime = 0;
-            dashCurveTime = 0;
-            isDashing = false;
-        }
+        
     }
 
     private void StateUpdate()
@@ -249,7 +257,7 @@ public class PlayerController : MonoBehaviour
             currentState = CharacterState.walk;
         }
         // If the player has double jumped and is moving up, set them to the double jump state
-        else if (doubleJumpSpent == true && verticalVelocity.y > 0)
+        else if (doubleJumpSpent == true && verticalVelocity.y > 0.5)
         {
             currentState = CharacterState.doublejump;
         }
@@ -259,12 +267,12 @@ public class PlayerController : MonoBehaviour
             currentState = CharacterState.falling;
         }
         // If the player has jumped and is moving up, set them to the jump state
-        else if (!IsGrounded() && verticalVelocity.y > 0)
+        else if (!IsGrounded() && verticalVelocity.y > 0.5)
         {
             currentState = CharacterState.jump;
         }
         // If the player is in the air and is moving down, set them to the falling state
-        else if (!IsGrounded() && verticalVelocity.y < 0)
+        else if (!IsGrounded() && verticalVelocity.y <= 0.5)
         {
             currentState = CharacterState.falling;
         }
@@ -355,7 +363,7 @@ public class PlayerController : MonoBehaviour
         {
             if (isDashing == false)
             {
-                selfRigidBody.MoveRotation(180);
+                //selfRigidBody.MoveRotation(180);
                 gravityEnabled = false;
                 verticalVelocity.y = 0;
             }
@@ -378,7 +386,7 @@ public class PlayerController : MonoBehaviour
         {
             if (isDashing == false)
             {
-                selfRigidBody.MoveRotation(0);
+                //selfRigidBody.MoveRotation(0);
             }
             gravityEnabled = true;
         }
