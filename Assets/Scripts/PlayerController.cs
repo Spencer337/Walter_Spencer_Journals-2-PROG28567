@@ -32,9 +32,9 @@ public class PlayerController : MonoBehaviour
     public Vector2 startPosition, endPosition;
     public bool isDashing = false;
     public AnimationCurve dashCurve;
-    public float dashCurveTime, maxDashSpeed;
+    public float dashCurveTime;
     public bool gravityEnabled = true;
-    public float antiGravSpeed = 0.5f;
+    public float reverseGravSpeed = 0.5f;
     public int health = 3;
 
     public CharacterState currentState = CharacterState.idle;
@@ -68,7 +68,6 @@ public class PlayerController : MonoBehaviour
         doubleJumpVelocity = 2 * doubleApexHeight / doubleApexTime;
 
         // Set the properties of the horiztonal movement variables
-        maxDashSpeed = maxSpeed + dashDistance;
         acceleration = maxSpeed / accelerationTime;
         deceleration = maxSpeed / decelerationTime;
 
@@ -139,6 +138,16 @@ public class PlayerController : MonoBehaviour
     {
         // Set the player's rigidbody velocity to equal the horizontal and vertical velocities
         selfRigidBody.linearVelocity = horizontalVelocity + verticalVelocity;
+        // Set the player's rotation. If gravity is not enabled and the player is not dashing, rotate them 180 degrees
+        if (gravityEnabled == false && isDashing == false)
+        {
+            selfRigidBody.MoveRotation(180);
+        }
+        // Otherwise, set their rotation back to zero
+        else
+        {
+            selfRigidBody.MoveRotation(0);
+        }
     }
 
     
@@ -178,15 +187,10 @@ public class PlayerController : MonoBehaviour
             horizontalVelocity = Vector2.Lerp(startPosition, endPosition, dashTime);
             dashCurveTime += Time.deltaTime;
             dashTime = 1 * dashCurve.Evaluate(dashCurveTime);
-            // If the player is moving faster than the max dash speed, set their movement back to the max dash speed
-            if (horizontalVelocity.magnitude > maxDashSpeed)
-            {
-                horizontalVelocity = horizontalVelocity.normalized * maxDashSpeed;
-            }
         }
         // If the dashTime or dashCurveTime are greater than 1, set them back to zero and end the dash
         // If the player presses the dash key again, also end the dash
-        if (dashTime > 1 || dashCurveTime > 1 || Input.GetKeyDown(KeyCode.Space))
+        if (dashCurveTime > 1 || Input.GetKeyDown(KeyCode.Space))
         {
             dashTime = 0;
             dashCurveTime = 0;
@@ -208,7 +212,6 @@ public class PlayerController : MonoBehaviour
         if (IsGrounded() == false && doubleJumpSpent == true && gravityEnabled == true)
         {
             verticalVelocity.y += doubleJumpGravity * Time.deltaTime;
-            hangTime += Time.deltaTime;
             // If the player is falling faster than the double jump terminal speed, set vertical velocity to the double jump terminal speed
             if (verticalVelocity.y < doubleJumpTerminalSpeed)
             {
@@ -238,7 +241,6 @@ public class PlayerController : MonoBehaviour
         {
             verticalVelocity.y = 0;
             horizontalVelocity.x = 0;
-            hangTime = coyoteTime;
             verticalVelocity.y += doubleJumpVelocity;
             doubleJumpTriggered = false;
             doubleJumpSpent = true;
@@ -361,12 +363,8 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.gameObject.layer == 6)
         {
-            if (isDashing == false)
-            {
-                //selfRigidBody.MoveRotation(180);
-                gravityEnabled = false;
-                verticalVelocity.y = 0;
-            }
+            gravityEnabled = false;
+            verticalVelocity.y = 0;
         }
     }
 
@@ -375,7 +373,7 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.gameObject.layer == 6)
         {
-            verticalVelocity.y -= playerGravity * Time.deltaTime * antiGravSpeed;
+            verticalVelocity.y -= playerGravity * Time.deltaTime * reverseGravSpeed;
         }
     }
 
@@ -384,10 +382,6 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.gameObject.layer == 6)
         {
-            if (isDashing == false)
-            {
-                //selfRigidBody.MoveRotation(0);
-            }
             gravityEnabled = true;
         }
     }
